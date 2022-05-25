@@ -105,7 +105,7 @@ def query(connection):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    db = 'postgresql://postgres:123456@localhost:5432/netology_db2'
+    db = 'postgresql://postgres:password@localhost:5432/netology_db2'
     engine = sqlalchemy.create_engine(db)
     connection = engine.connect()
     query(connection)
