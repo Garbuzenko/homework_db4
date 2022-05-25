@@ -9,7 +9,6 @@ from pprint import pprint
 # import sqlalchemy
 import sqlalchemy
 
-
 def query(connection):
 
     ########### Запросы #######
