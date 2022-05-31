@@ -53,37 +53,36 @@ def query(connection):
 
     print('5 названия сборников, в которых присутствует конкретный исполнитель (выберите сами)')
     sql = """
-                SELECT c.name from collection as c
-                WHERE c.id IN (
-                       SELECT tc.collection_id FROM tracks_collection as tc
-                       INNER JOIN track as t ON t.id = tc.track_id
-                       INNER JOIN singer as s ON s.id = t.singer_id
-                       WHERE s.full_name = 'Король и Шут'
-                );
+                SELECT DISTINCT c.name from collection as c
+                INNER JOIN tracks_collection as tc ON tc.collection_id = c.id
+                INNER JOIN track as t ON t.id = tc.track_id
+                INNER JOIN singer as s ON s.id = t.singer_id
+                WHERE s.full_name = 'Король и Шут';
                 """
     pprint(connection.execute(sql).fetchall())
 
     print('6 название альбомов, в которых присутствуют исполнители более 1 жанра')
     sql = """ 
-            SELECT name FROM albom 
-            WHERE id in
-                ( SELECT sa.albom_id FROM singers_alboms as sa
-                JOIN singers_geners as sg ON sg.singer_id = sa.singer_id
-                GROUP BY sa.albom_id
-                HAVING count(sg.geners_id) > 1 )
+            SELECT name FROM albom as a
+            JOIN singers_alboms as sa ON sa.albom_id = a.id
+            JOIN singers_geners as sg ON sg.singer_id = sa.singer_id
+            GROUP BY name
+            HAVING count(sg.geners_id) > 1 
         ;"""
     pprint(connection.execute(sql).fetchall())
 
     print('7 наименование треков, которые не входят в сборники')
-    sql = """   SELECT name FROM track
-                WHERE id not in
-                    ( SELECT track_id FROM tracks_collection )
+    sql = """   SELECT t.name FROM track as t
+                FULL OUTER JOIN tracks_collection as tc on tc.track_id = t.id
+                ORDER BY name 
             ;"""
+
     pprint(connection.execute(sql).fetchall())
 
     print('8 исполнителя(-ей), написавшего самый короткий по продолжительности трек (теоретически таких треков может быть несколько)')
-    sql = """  SELECT full_name FROM singer
-               WHERE id in (SELECT singer_id FROM track WHERE duration_ms in ( SELECT min(duration_ms) FROM track ))
+    sql = """  SELECT s.full_name FROM singer AS s
+               JOIN track AS t ON t.singer_id = s.id
+               WHERE t.duration_ms in ( SELECT min(duration_ms) FROM track )
            ;"""
     pprint(connection.execute(sql).fetchall())
 
@@ -105,7 +104,7 @@ def query(connection):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    db = 'postgresql://postgres:password@localhost:5432/netology_db2'
+    db = 'postgresql://postgres:123456@localhost:5432/netology_db2'
     engine = sqlalchemy.create_engine(db)
     connection = engine.connect()
     query(connection)
